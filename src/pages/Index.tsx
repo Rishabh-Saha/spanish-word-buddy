@@ -1,12 +1,46 @@
 import { useState } from "react";
-import { BookOpen, GraduationCap } from "lucide-react";
+import { BookOpen, GraduationCap, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import VocabularyMode from "@/components/VocabularyMode";
 import TestMode from "@/components/TestMode";
+import { useFlashcards } from "@/hooks/useFlashcards";
 
 type Mode = "vocabulary" | "test";
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<Mode>("vocabulary");
+  const { data: flashcards, isLoading, error, refetch } = useFlashcards();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading flashcards...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !flashcards) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md p-8">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Failed to load flashcards</h2>
+          <p className="text-muted-foreground mb-6">
+            {error instanceof Error ? error.message : "Unable to connect to the server"}
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 mx-auto"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +88,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container max-w-3xl mx-auto px-4 py-8">
-        {activeMode === "vocabulary" ? <VocabularyMode /> : <TestMode />}
+        {activeMode === "vocabulary" ? <VocabularyMode flashcards={flashcards} /> : <TestMode flashcards={flashcards} />}
       </main>
 
       {/* Decorative background elements */}

@@ -1,8 +1,12 @@
 import { useState, useMemo } from "react";
 import { Check, X, RotateCcw, Trophy } from "lucide-react";
-import { flashcards } from "@/data/flashcards";
+import { Flashcard } from "@/data/flashcards";
 
-const TestMode = () => {
+interface TestModeProps {
+  flashcards: Flashcard[];
+}
+
+const TestMode = ({ flashcards }: TestModeProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
