@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 
-const WEBHOOK_URL = "https://rishabh-saha.app.n8n.cloud/webhook-test/vocabulary/spanish/update";
+const WEBHOOK_URL = import.meta.env.SPANISH_FLASHCARDS_UPDATE_URL;
 
 // Get credentials from environment variables
-const USERNAME = import.meta.env.VITE_WEBHOOK_USERNAME;
-const PASSWORD = import.meta.env.VITE_WEBHOOK_PASSWORD;
+const USERNAME = import.meta.env.N8N_WEBHOOK_USERNAME;
+const PASSWORD = import.meta.env.N8N_WEBHOOK_PASSWORD;
 
 // Create Basic Auth header
 const createAuthHeader = () => {
