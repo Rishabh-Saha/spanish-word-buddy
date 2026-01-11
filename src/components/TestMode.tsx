@@ -24,11 +24,11 @@ const TestMode = ({ flashcards }: TestModeProps) => {
   const options = useMemo(() => {
     const correctAnswer = currentQuestion.english;
     const wrongAnswers = flashcards
-      .filter(card => card.id !== currentQuestion.id)
+      .filter(card => card.row_number !== currentQuestion.row_number)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
       .map(card => card.english);
-    
+
     return [...wrongAnswers, correctAnswer].sort(() => Math.random() - 0.5);
   }, [currentQuestion]);
 

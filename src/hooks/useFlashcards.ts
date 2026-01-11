@@ -37,7 +37,7 @@ export const useFlashcards = () => {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    staleTime: 15 * 60 * 1000, // 5 minutes
+    retry: 1,
   });
 };

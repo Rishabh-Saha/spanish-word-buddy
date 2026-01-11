@@ -1,6 +1,8 @@
 export interface Flashcard {
-  id: number;
+  row_number: number;
   spanish: string;
   english: string;
   usage: string;
+  known?: boolean;
+  learned?: boolean;
 }
