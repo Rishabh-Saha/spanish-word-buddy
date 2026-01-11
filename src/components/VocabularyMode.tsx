@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import FlashCard from "./FlashCard";
-import { flashcards, Flashcard } from "@/data/flashcards";
+import { Flashcard } from "@/data/flashcards";
 
-const VocabularyMode = () => {
+interface VocabularyModeProps {
+  flashcards: Flashcard[];
+}
+
+const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [knownCards, setKnownCards] = useState<Set<number>>(new Set());
   const [unknownCards, setUnknownCards] = useState<Set<number>>(new Set());
