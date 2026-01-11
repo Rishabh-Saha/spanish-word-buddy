@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Flashcard } from "@/data/flashcards";
 
-const WEBHOOK_URL = import.meta.env.SPANISH_FLASHCARDS_GET_URL;
+const WEBHOOK_URL = import.meta.env.VITE_SPANISH_FLASHCARDS_GET_URL;
 
 // Get credentials from environment variables
-const USERNAME = import.meta.env.N8N_WEBHOOK_USERNAME;
-const PASSWORD = import.meta.env.N8N_WEBHOOK_PASSWORD;
+const USERNAME = import.meta.env.VITE_N8N_WEBHOOK_USERNAME;
+const PASSWORD = import.meta.env.VITE_N8N_WEBHOOK_PASSWORD;
 
 // Create Basic Auth header
 const createAuthHeader = () => {
   if (!USERNAME || !PASSWORD) {
-    console.warn("Webhook credentials not configured");
+    console.warn("Webhook credentials not configured", USERNAME, PASSWORD);
     return "";
   }
   const credentials = btoa(`${USERNAME}:${PASSWORD}`);
