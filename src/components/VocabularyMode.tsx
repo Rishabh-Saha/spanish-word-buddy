@@ -64,13 +64,9 @@ const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
 
   const resetProgress = () => {
     // Update backend before resetting
-    if (knownCards.size > 0 || unknownCards.size > 0) {
+    if (flashcards.length > 0) {
       const updates = [
-        ...Array.from(knownCards).map((row_number) => ({
-          row_number,
-          known: true,
-        })),
-        ...Array.from(unknownCards).map((row_number) => ({
+        ...Array.from(flashcards).map(({ row_number }) => ({
           row_number,
           known: false,
         })),
@@ -155,7 +151,7 @@ const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
           className="px-4 py-3 rounded-xl bg-secondary text-secondary-foreground transition-all hover:bg-secondary/80 active:scale-95 flex items-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
-          <span className="text-sm font-medium">Reset</span>
+          <span className="text-sm font-medium">Reset All</span>
         </button>
 
         <button
