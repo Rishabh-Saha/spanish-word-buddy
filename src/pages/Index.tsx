@@ -1,10 +1,18 @@
 import { useState } from "react";
-import { BookOpen, GraduationCap, Loader2, AlertCircle, RotateCcw } from "lucide-react";
+import {
+  BookOpen,
+  Book,
+  GraduationCap,
+  Loader2,
+  AlertCircle,
+  RotateCcw,
+} from "lucide-react";
 import VocabularyMode from "@/components/VocabularyMode";
 import TestMode from "@/components/TestMode";
 import { useFlashcards } from "@/hooks/useFlashcards";
+import WordList from "@/components/WordList";
 
-type Mode = "vocabulary" | "test";
+type Mode = "all" | "vocabulary" | "test";
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<Mode>("vocabulary");
@@ -26,9 +34,13 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md p-8">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Failed to load flashcards</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Failed to load flashcards
+          </h2>
           <p className="text-muted-foreground mb-6">
-            {error instanceof Error ? error.message : "Unable to connect to the server"}
+            {error instanceof Error
+              ? error.message
+              : "Unable to connect to the server"}
           </p>
           <button
             onClick={() => refetch()}
@@ -56,9 +68,20 @@ const Index = () => {
                 Spanish Flashcards
               </p>
             </div>
-            
+
             {/* Mode Tabs */}
             <div className="flex gap-1 p-1 bg-secondary rounded-xl">
+              <button
+                onClick={() => setActiveMode("all")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeMode === "all"
+                    ? "bg-card text-foreground card-shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Book className="w-4 h-4" />
+                <span className="hidden sm:inline">All Words</span>
+              </button>
               <button
                 onClick={() => setActiveMode("vocabulary")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -88,9 +111,19 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container max-w-3xl mx-auto px-4 py-8">
-        {activeMode === "vocabulary" ? <VocabularyMode flashcards={flashcards} /> : <TestMode flashcards={flashcards} />}
+        {(() => {
+          switch (activeMode) {
+            case "all":
+              return <WordList flashcards={flashcards} />;
+            case "vocabulary":
+              return <VocabularyMode flashcards={flashcards} />;
+            case "test":
+              return <TestMode flashcards={flashcards} />;
+            default:
+              return null;
+          }
+        })()}
       </main>
-
       {/* Decorative background elements */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
