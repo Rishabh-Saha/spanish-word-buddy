@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { BookOpen, GraduationCap, Loader2, AlertCircle, RotateCcw } from "lucide-react";
+import { BookOpen, GraduationCap, Loader2, AlertCircle, RotateCcw, List } from "lucide-react";
 import VocabularyMode from "@/components/VocabularyMode";
 import TestMode from "@/components/TestMode";
+import WordList from "@/components/WordList";
 import { useFlashcards } from "@/hooks/useFlashcards";
 
-type Mode = "vocabulary" | "test";
+type Mode = "vocabulary" | "test" | "words";
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<Mode>("vocabulary");
@@ -42,6 +43,17 @@ const Index = () => {
     );
   }
 
+  const renderContent = () => {
+    switch (activeMode) {
+      case "vocabulary":
+        return <VocabularyMode flashcards={flashcards} />;
+      case "test":
+        return <TestMode flashcards={flashcards} />;
+      case "words":
+        return <WordList flashcards={flashcards} />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -71,6 +83,17 @@ const Index = () => {
                 <span className="hidden sm:inline">Vocabulary</span>
               </button>
               <button
+                onClick={() => setActiveMode("words")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeMode === "words"
+                    ? "bg-card text-foreground card-shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">Words</span>
+              </button>
+              <button
                 onClick={() => setActiveMode("test")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeMode === "test"
@@ -88,7 +111,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container max-w-3xl mx-auto px-4 py-8">
-        {activeMode === "vocabulary" ? <VocabularyMode flashcards={flashcards} /> : <TestMode flashcards={flashcards} />}
+        {renderContent()}
       </main>
 
       {/* Decorative background elements */}
