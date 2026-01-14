@@ -99,8 +99,6 @@ const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
     }
   }, [currentIndex, knownCards, unknownCards, updateCardStatus]);
 
-  console.log("notKnownFlashcards->,", notKnownFlashcards);
-
   return (
     <div className="min-h-[calc(100vh-200px)] flex flex-col">
       {/* Progress bar */}

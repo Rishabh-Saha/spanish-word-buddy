@@ -5,4 +5,5 @@ export interface Flashcard {
   usage: string;
   known?: boolean;
   learned?: boolean;
+  difficulty?: "easy" | "medium" | "hard";
 }
