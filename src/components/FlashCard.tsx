@@ -10,7 +10,12 @@ interface FlashCardProps {
   onUnknown?: () => void;
 }
 
-const FlashCard = ({ card, showActions = false, onKnown, onUnknown }: FlashCardProps) => {
+const FlashCard = ({
+  card,
+  showActions = false,
+  onKnown,
+  onUnknown,
+}: FlashCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const { speak, isSpeaking } = useTextToSpeech();
 
@@ -25,36 +30,36 @@ const FlashCard = ({ card, showActions = false, onKnown, onUnknown }: FlashCardP
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div 
-        className="perspective cursor-pointer"
-        onClick={handleFlip}
-      >
-        <div className={`flip-card-inner relative w-full h-80 ${isFlipped ? 'flipped' : ''}`}>
+      <div className="perspective cursor-pointer" onClick={handleFlip}>
+        <div
+          className={`flip-card-inner relative w-full h-80 ${
+            isFlipped ? "flipped" : ""
+          }`}
+        >
           {/* Front of card - Spanish word */}
           <div className="absolute inset-0 backface-hidden">
             <div className="h-full bg-card rounded-2xl card-shadow p-8 flex flex-col items-center justify-center border border-border transition-shadow hover:card-shadow-hover">
-              {/* Audio button */}
-              <button
-                onClick={handleSpeak}
-                className={`mb-4 p-3 rounded-full transition-all ${
-                  isSpeaking 
-                    ? "bg-primary text-primary-foreground animate-pulse-soft" 
-                    : "bg-primary/10 text-primary hover:bg-primary/20"
-                }`}
-                aria-label="Listen to pronunciation"
-              >
-                <Volume2 className="w-5 h-5" />
-              </button>
-              
               <span className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
                 Español
               </span>
               <h2 className="font-display text-4xl font-semibold text-foreground text-center leading-tight">
                 {card.spanish}
               </h2>
-              <p className="text-sm text-muted-foreground mt-6">
+              <p className="text-sm text-muted-foreground mt-2">
                 Tap to reveal translation
               </p>
+              {/* Audio button */}
+              <button
+                onClick={handleSpeak}
+                className={`mt-4 p-3 rounded-full transition-all ${
+                  isSpeaking
+                    ? "bg-primary text-primary-foreground animate-pulse-soft"
+                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                }`}
+                aria-label="Listen to pronunciation"
+              >
+                <Volume2 className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
