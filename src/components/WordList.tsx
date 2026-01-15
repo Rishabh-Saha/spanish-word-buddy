@@ -44,7 +44,7 @@ const WordList = ({ flashcards }: WordListProps) => {
     };
 
     filteredFlashcards.forEach((card) => {
-      const difficulty = card.difficulty || "medium";
+      const difficulty = (card.difficulty.toLowerCase() as Difficulty) || "medium";
       groups[difficulty].push(card);
     });
 
