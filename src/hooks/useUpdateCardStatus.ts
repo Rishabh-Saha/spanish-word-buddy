@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 const WEBHOOK_URL = import.meta.env.VITE_SPANISH_FLASHCARDS_UPDATE_URL;
+const LEARNED_WEBHOOK_URL = import.meta.env.VITE_SPANISH_FLASHCARDS_LEARNED_UPDATE_URL;
 
 // Get credentials from environment variables
 const USERNAME = import.meta.env.VITE_N8N_WEBHOOK_USERNAME;
@@ -51,4 +52,36 @@ export const useUpdateCardStatus = () => {
       console.error("Failed to update card status:", error);
     },
   });
+};
+
+export const useUpdateLearnedStatus = () => {
+  return useMutation({
+    mutationFn: async (data: { row_number: number; learned: number }[]) => {
+      const authHeader = createAuthHeader();
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      if (authHeader) {
+        headers["Authorization"] = authHeader;
+      }
+
+      const response = await fetch(LEARNED_WEBHOOK_URL, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update learned status");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      console.log("Learned status updated successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to update learned status:", error);
+    },
+  })
 };
