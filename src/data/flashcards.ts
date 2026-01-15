@@ -6,4 +6,6 @@ export interface Flashcard {
   known?: boolean;
   learned?: number;
   difficulty?: "easy" | "medium" | "hard";
+  difficulty_score?: number;
+  group?: string;
 }

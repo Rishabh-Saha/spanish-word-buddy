@@ -9,12 +9,6 @@ interface VocabularyModeProps {
 }
 
 const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
-  // Filter to show only not learned flashcards
-  const notKnownFlashcards = useMemo(
-    () => flashcards.filter((card) => card.known === false),
-    [flashcards]
-  );
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const [knownCards, setKnownCards] = useState<Set<number>>(new Set());
   const [unknownCards, setUnknownCards] = useState<Set<number>>(new Set());
@@ -22,6 +16,43 @@ const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
   const cardsReviewedSinceLastUpdate = useRef(0);
 
   const { mutate: updateCardStatus } = useUpdateCardStatus();
+
+  // Filter to show only not learned flashcards
+  // sort based on review priority
+  /**
+   * review_priority =
+   * +100 if known=false
+   * (30 - learned)*2 (so low learned floats up)
+   * difficulty_score*3 (harder rises faster)
+   * 20 if learned >= 10 (cap over-review)
+   */
+  const computeReviewPriority = (card: Flashcard) => {
+    const learned = card.learned ?? 0;
+    const difficulty = card.difficulty_score ?? 0;
+
+    let score = 0;
+
+    if (card.known === false) score += 100;
+
+    // Less learned => higher priority
+    score += Math.max(0, 30 - learned) * 2;
+
+    // Higher difficulty => higher priority
+    score += difficulty * 3;
+
+    // If it's been learned a lot, push it down the list
+    if (learned >= 10) score -= 20;
+
+    return score;
+  };
+  const notKnownFlashcards = useMemo(
+    () =>
+      flashcards
+        .slice()
+        .sort((a, b) => computeReviewPriority(b) - computeReviewPriority(a)),
+    [flashcards]
+  );
+
 
   const currentCard = notKnownFlashcards[currentIndex];
   const progress = ((currentIndex + 1) / notKnownFlashcards.length) * 100;
