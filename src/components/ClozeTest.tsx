@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { RotateCcw, Trophy } from "lucide-react";
 import { Flashcard } from "@/data/flashcards";
+import { useUpdateLearnedStatus } from "@/hooks/useUpdateCardStatus";
 
 interface ClozeTestProps {
   flashcards: Flashcard[];
@@ -14,6 +15,10 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
   const [showResult, setShowResult] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
+  // Track learned cards for batch update
+  const learnedCardsRef = useRef<Map<number, number>>(new Map());
+  const updateLearnedStatus = useUpdateLearnedStatus();
+
   // Shuffle cards for the test
   const shuffledCards = useMemo(() => {
     return [...flashcards].sort(() => Math.random() - 0.5);
@@ -26,37 +31,66 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
     if (!currentQuestion) return { text: "", answer: "" };
     const usage = currentQuestion.usage;
     const word = currentQuestion.spanish;
-    
+
     // Try to find the word in usage (case insensitive)
     const regex = new RegExp(`\\b${word}\\b`, "gi");
     const match = usage.match(regex);
-    
+
     if (match) {
       const clozeText = usage.replace(regex, "______");
       return { text: clozeText, answer: match[0] };
     }
-    
+
     // Fallback: just show the usage and ask for the word
     return { text: usage, answer: word };
   }, [currentQuestion]);
 
   const normalizeAnswer = (str: string) => {
-    return str.toLowerCase().trim().replace(/[¿¡!?.,]/g, "");
+    return str
+      .toLowerCase()
+      .trim()
+      .replace(/[¿¡!?.,]/g, "");
   };
 
   const checkClozeAnswer = useCallback(() => {
     if (showResult) return;
-    
-    const isCorrect = normalizeAnswer(typedAnswer) === normalizeAnswer(clozeData.answer);
+
+    const isCorrect =
+      normalizeAnswer(typedAnswer) === normalizeAnswer(clozeData.answer);
     setShowResult(true);
     if (isCorrect) {
-      setScore(prev => prev + 1);
+      setScore((prev) => prev + 1);
+
+      // Track learned card
+      const rowNumber = currentQuestion.row_number;
+      const currentCount = learnedCardsRef.current.get(rowNumber) || 0;
+      const card = flashcards.find((c) => c.row_number === rowNumber);
+      const newLearnedCount = (card?.learned || 0) + 1;
+      learnedCardsRef.current.set(rowNumber, newLearnedCount);
+
+      // Batch update every 10 correct answers
+      if (learnedCardsRef.current.size >= 10) {
+        const updates = Array.from(learnedCardsRef.current.entries()).map(
+          ([row_number, learned]) => ({
+            row_number,
+            learned,
+          })
+        );
+        updateLearnedStatus.mutate(updates);
+        learnedCardsRef.current.clear();
+      }
     }
-  }, [typedAnswer, clozeData.answer, showResult]);
+  }, [
+    typedAnswer,
+    clozeData.answer,
+    showResult,
+    currentQuestion,
+    updateLearnedStatus,
+  ]);
 
   const handleNext = () => {
     if (currentQuestionIndex < shuffledCards.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setTypedAnswer("");
       setShowResult(false);
     } else {
@@ -72,8 +106,28 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
     setIsComplete(false);
   };
 
-  const progress = shuffledCards.length > 0 ? ((currentQuestionIndex + 1) / shuffledCards.length) * 100 : 0;
-  const finalPercentage = shuffledCards.length > 0 ? Math.round((score / shuffledCards.length) * 100) : 0;
+  // Send remaining updates when test completes
+  useEffect(() => {
+    if (isComplete && learnedCardsRef.current.size > 0) {
+      const updates = Array.from(learnedCardsRef.current.entries()).map(
+        ([row_number, learned]) => ({
+          row_number,
+          learned,
+        })
+      );
+      updateLearnedStatus.mutate(updates);
+      learnedCardsRef.current.clear();
+    }
+  }, [isComplete, updateLearnedStatus]);
+
+  const progress =
+    shuffledCards.length > 0
+      ? ((currentQuestionIndex + 1) / shuffledCards.length) * 100
+      : 0;
+  const finalPercentage =
+    shuffledCards.length > 0
+      ? Math.round((score / shuffledCards.length) * 100)
+      : 0;
 
   // Completion screen
   if (isComplete) {
@@ -89,7 +143,7 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
           <p className="text-muted-foreground mb-6">
             You've completed the test
           </p>
-          
+
           <div className="bg-secondary rounded-xl p-6 mb-6">
             <div className="text-5xl font-display font-bold text-gradient mb-2">
               {finalPercentage}%
@@ -100,11 +154,11 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">
-            {finalPercentage >= 80 
-              ? "Amazing work! You're mastering Spanish!" 
-              : finalPercentage >= 50 
-                ? "Good effort! Keep practicing to improve."
-                : "Keep learning! Practice makes perfect."}
+            {finalPercentage >= 80
+              ? "Amazing work! You're mastering Spanish!"
+              : finalPercentage >= 50
+              ? "Good effort! Keep practicing to improve."
+              : "Keep learning! Practice makes perfect."}
           </p>
 
           <div className="space-y-3">
@@ -127,7 +181,8 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
     );
   }
 
-  const isCorrect = normalizeAnswer(typedAnswer) === normalizeAnswer(clozeData.answer);
+  const isCorrect =
+    normalizeAnswer(typedAnswer) === normalizeAnswer(clozeData.answer);
 
   return (
     <div className="min-h-[calc(100vh-200px)] flex flex-col">
@@ -135,19 +190,18 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
       <div className="mb-8">
         <div className="flex justify-between text-sm text-muted-foreground mb-2">
           <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="text-primary hover:underline"
-            >
+            <button onClick={onBack} className="text-primary hover:underline">
               ← Change Mode
             </button>
             <span className="text-border">|</span>
-            <span>Question {currentQuestionIndex + 1} of {shuffledCards.length}</span>
+            <span>
+              Question {currentQuestionIndex + 1} of {shuffledCards.length}
+            </span>
           </div>
           <span className="text-success font-medium">Score: {score}</span>
         </div>
         <div className="h-2 bg-secondary rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
@@ -195,8 +249,12 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
 
             {showResult && !isCorrect && (
               <div className="p-4 bg-success/10 rounded-xl border border-success/30 text-center">
-                <span className="text-sm text-muted-foreground">Correct answer: </span>
-                <span className="font-semibold text-success">{clozeData.answer}</span>
+                <span className="text-sm text-muted-foreground">
+                  Correct answer:{" "}
+                </span>
+                <span className="font-semibold text-success">
+                  {clozeData.answer}
+                </span>
               </div>
             )}
 
@@ -213,7 +271,9 @@ const ClozeTest = ({ flashcards, onBack }: ClozeTestProps) => {
                 onClick={handleNext}
                 className="w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-medium transition-all hover:opacity-90 active:scale-98 button-shadow"
               >
-                {currentQuestionIndex < shuffledCards.length - 1 ? "Next Question" : "See Results"}
+                {currentQuestionIndex < shuffledCards.length - 1
+                  ? "Next Question"
+                  : "See Results"}
               </button>
             )}
           </div>

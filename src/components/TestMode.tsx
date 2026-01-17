@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Keyboard, Type, ListChecks } from "lucide-react";
 import { Flashcard } from "@/data/flashcards";
 import TypingTest from "./TypingTest";
@@ -13,6 +13,11 @@ type TestType = "typing" | "cloze" | "multiple-choice";
 
 const TestMode = ({ flashcards }: TestModeProps) => {
   const [testType, setTestType] = useState<TestType | null>(null);
+  const notLearnedFlashcards = useMemo(
+    // Filter flashcards that are known but not yet learned
+    () => flashcards.filter((card) => !card.learned && card.known),
+    [flashcards]
+  );
 
   const goToTestSelection = () => {
     setTestType(null);
@@ -20,15 +25,27 @@ const TestMode = ({ flashcards }: TestModeProps) => {
 
   // Render selected test component
   if (testType === "typing") {
-    return <TypingTest flashcards={flashcards} onBack={goToTestSelection} />;
+    return (
+      <TypingTest
+        flashcards={notLearnedFlashcards}
+        onBack={goToTestSelection}
+      />
+    );
   }
 
   if (testType === "cloze") {
-    return <ClozeTest flashcards={flashcards} onBack={goToTestSelection} />;
+    return (
+      <ClozeTest flashcards={notLearnedFlashcards} onBack={goToTestSelection} />
+    );
   }
 
   if (testType === "multiple-choice") {
-    return <MultipleChoiceTest flashcards={flashcards} onBack={goToTestSelection} />;
+    return (
+      <MultipleChoiceTest
+        flashcards={notLearnedFlashcards}
+        onBack={goToTestSelection}
+      />
+    );
   }
 
   // Test type selection screen
@@ -54,7 +71,9 @@ const TestMode = ({ flashcards }: TestModeProps) => {
                 <Keyboard className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-1">EN → ES Typing</h3>
+                <h3 className="font-semibold text-foreground mb-1">
+                  EN → ES Typing
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   See English, type the Spanish translation
                 </p>
@@ -71,7 +90,9 @@ const TestMode = ({ flashcards }: TestModeProps) => {
                 <Type className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Cloze Deletion</h3>
+                <h3 className="font-semibold text-foreground mb-1">
+                  Cloze Deletion
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Fill in the missing word in the sentence
                 </p>
@@ -88,7 +109,9 @@ const TestMode = ({ flashcards }: TestModeProps) => {
                 <ListChecks className="w-6 h-6 text-success" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Multiple Choice (by Group)</h3>
+                <h3 className="font-semibold text-foreground mb-1">
+                  Multiple Choice (by Group)
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Pick the right answer from similar difficulty words
                 </p>

@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Check, X, RotateCcw, Trophy } from "lucide-react";
 import { Flashcard } from "@/data/flashcards";
+import { useUpdateLearnedStatus } from "@/hooks/useUpdateCardStatus";
 
 interface MultipleChoiceTestProps {
   flashcards: Flashcard[];
@@ -13,6 +14,10 @@ const MultipleChoiceTest = ({ flashcards, onBack }: MultipleChoiceTestProps) => 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  
+  // Track learned cards for batch update
+  const learnedCardsRef = useRef<Map<number, number>>(new Map());
+  const {mutateAsync: updateLearnedStatus} = useUpdateLearnedStatus();
 
   // Shuffle cards for the test
   const shuffledCards = useMemo(() => {
@@ -49,6 +54,23 @@ const MultipleChoiceTest = ({ flashcards, onBack }: MultipleChoiceTestProps) => 
     
     if (answer === currentQuestion.english) {
       setScore(prev => prev + 1);
+      
+      // Track learned card
+      const rowNumber = currentQuestion.row_number;
+      const currentCount = learnedCardsRef.current.get(rowNumber) || 0;
+      const card = flashcards.find(card => card.row_number === rowNumber);
+      const newLearnedCount = (card?.learned || 0) + 1;
+      learnedCardsRef.current.set(rowNumber, newLearnedCount);
+      
+      // Batch update every 10 correct answers
+      if (learnedCardsRef.current.size >= 10) {
+        const updates = Array.from(learnedCardsRef.current.entries()).map(([row_number, learned]) => ({
+          row_number,
+          learned,
+        }));
+        updateLearnedStatus(updates);
+        learnedCardsRef.current.clear();
+      }
     }
   };
 
@@ -69,6 +91,18 @@ const MultipleChoiceTest = ({ flashcards, onBack }: MultipleChoiceTestProps) => 
     setShowResult(false);
     setIsComplete(false);
   };
+
+  // Send remaining updates when test completes
+  useEffect(() => {
+    if (isComplete && learnedCardsRef.current.size > 0) {
+      const updates = Array.from(learnedCardsRef.current.entries()).map(([row_number, learned]) => ({
+        row_number,
+        learned,
+      }));
+      updateLearnedStatus(updates);
+      learnedCardsRef.current.clear();
+    }
+  }, [isComplete, updateLearnedStatus]);
 
   const progress = shuffledCards.length > 0 ? ((currentQuestionIndex + 1) / shuffledCards.length) * 100 : 0;
   const finalPercentage = shuffledCards.length > 0 ? Math.round((score / shuffledCards.length) * 100) : 0;
