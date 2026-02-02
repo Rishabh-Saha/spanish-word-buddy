@@ -24,7 +24,7 @@ const VocabularyMode = ({ flashcards }: VocabularyModeProps) => {
       flashcards
         .filter((card) => !card.known)
         .slice()
-        .sort((a, b) => a.row_number - b.row_number),
+        .sort((a, b) => b.row_number - a.row_number),
     [flashcards]
   );
 
